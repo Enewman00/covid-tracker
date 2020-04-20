@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--viewport so it adjusts to device width-->
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="sections.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat|Roboto|Source+Sans+Pro|Playfair+Display" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <script type="text/javascript" src="js/cases.js"></script>
+
+    <title>
+        Corona (COVID-19) Tracker
+    </title>
+
+</head>
+
+
+<body>
+
+<div class="header">
+    <form id="myForm" onsubmit="changeForm(); return false" action="#">
+        <select id="selectNumber" onchange="changeForm();">
+            <option>Global</option>
+        </select>
+    </form>
+</div>
+<script>populateCountries();</script>
+
+<div class="pageContents">
+    <div class="title">
+        <h1>Corona Virus (COVID-19) Tracker</h1>
+    </div>
+    <div class="totals">
+        <h1 id="casesText" class="topText">Total Cases:</h1>
+        <h1 id="totalCases" class="topNumber"></h1>
+    
+    
+        <h1 id="deathsText" class="topText">Total Deaths:</h1>
+        <h1 id="totalDeaths" class="topNumber"></h1>
+    
+        <h1 id="recoveredText" class="topText">Total Recovered:</h1>
+        <h1 id="totalRecovered" class="topNumber"></h1>
+        <script>getCaseData("Global");</script>
+    </div>
+    
+    
+    <div>
+        <canvas id="myChart" width="400" height="400"></canvas>
+        <script>getGraphData("Global");</script>
+    </div>
+    
+    <div class="totals safe">
+        <h1>How to stay safe</h1>
+        <p>Wash your hecking hands.</p>
+        <p>Stay the heck home.</p>
+        <p>Don't touch your hecking face.</p>
+
+    </div>
+    <br>
+    <div class="totals safe">
+        <h1>Sources</h1>
+        <a href="https://www.thevirustracker.com">www.thevirustracker.com</a>
+    </div>
+</div>
+
+
+</body>
+</html>

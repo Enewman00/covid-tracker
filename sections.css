@@ -1,0 +1,90 @@
+.header
+{
+    width: 100%;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    height: 40px;
+}
+
+#selectNumber
+{
+    outline: none;
+    border: none;
+    font-family: "Montserrat";
+    font-size: 25px;
+    height: 40px;
+    /* appearance: none; */
+    width: 100%;
+    background-color: lightgray;
+    text-align-last: center;
+}
+
+.title
+{
+    padding-top: 0px;
+    text-align: center;
+    font-family: "Montserrat";
+    font-size: 4vw;
+}
+.pageContents
+{
+    margin: 100px auto;
+}
+
+canvas {
+    background-color : #fff;
+}
+
+.totals
+{
+    text-align: center;
+    font-family: "Montserrat";
+}
+
+.topText
+{
+    color: rgb(90,90,90);
+    font-size: 5vw;
+    margin-bottom: 10px;
+}
+@media screen and (min-width: 1000px) {
+  .topNumber {
+     font-size: 75px !important;
+  }
+  .topText {
+     font-size: 46px;
+  }
+  .title {
+     font-size: 36px;
+  }
+  .totals {
+     font-size: 36px !important;
+  }
+}
+.topNumber
+{
+    font-size: 8vw;
+    margin-top: 0px;
+    margin-bottom: 60px;
+}
+
+.safe
+{
+    font-size: 5vw;
+}
+
+
+ul
+{
+    list-style-position: inside;
+}
+#totalDeaths
+{
+    color: rgb(131,0,0);
+}
+
+#totalRecovered
+{
+    color: rgb(0,137,0);
+}
