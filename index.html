@@ -11,7 +11,7 @@
     <script type="text/javascript" src="js/cases.js"></script>
 
     <title>
-        Corona (COVID-19) Tracker
+        COVID-19 Tracker
     </title>
 
 </head>
@@ -19,19 +19,23 @@
 
 <body>
 
-<div class="header">
-    <form id="myForm" onsubmit="changeForm(); return false" action="#">
-        <select id="selectNumber" onchange="changeForm();">
-            <option>Global</option>
-        </select>
-    </form>
-</div>
-<script>populateCountries();</script>
+
+
 
 <div class="pageContents">
     <div class="title">
-        <h1>Corona Virus (COVID-19) Tracker</h1>
+        <h1>COVID-19 Tracker</h1>
     </div>
+    <div class="header">
+        <form id="myForm" onsubmit="changeForm(); return false" action="#">
+            <select id="selectNumber" onchange="changeForm();">
+                <option>All States</option>
+            </select>
+        </form>
+    </div>
+    
+    <script>populateStates();</script>
+    
     <div class="totals">
         <h1 id="casesText" class="topText">Total Cases:</h1>
         <h1 id="totalCases" class="topNumber"></h1>
@@ -42,13 +46,13 @@
     
         <h1 id="recoveredText" class="topText">Total Recovered:</h1>
         <h1 id="totalRecovered" class="topNumber"></h1>
-        <script>getCaseData("Global");</script>
+        <script>getCaseData("All States");</script>
     </div>
     
     
     <div>
         <canvas id="myChart" width="400" height="400"></canvas>
-        <script>getGraphData("Global");</script>
+        <script>getGraphData("All States");</script>
     </div>
     
     <div class="totals safe">
@@ -61,7 +65,7 @@
     <br>
     <div class="totals safe">
         <h1>Sources</h1>
-        <a href="https://www.thevirustracker.com">www.thevirustracker.com</a>
+        <a href="https://www.covidtracking.com">www.covidtracking.com</a>
     </div>
 </div>
 

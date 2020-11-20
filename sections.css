@@ -1,22 +1,26 @@
 .header
 {
-    width: 100%;
-    position: fixed;
+    width: 30%;
+    position: sticky;
     top: 0px;
-    left: 0px;
+    left: 35%;
     height: 40px;
+    border-width: 1px;
+    border-color: black;
+    border-radius: 7px;
 }
 
 #selectNumber
 {
+    border-radius: 7px;
     outline: none;
-    border: none;
+    /* border: none; */
     font-family: "Montserrat";
     font-size: 25px;
     height: 40px;
     /* appearance: none; */
     width: 100%;
-    background-color: lightgray;
+    background-color: white;
     text-align-last: center;
 }
 

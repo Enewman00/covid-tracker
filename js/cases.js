@@ -2,51 +2,49 @@
 function getGlobalGraph()
 {
     var dateCount = {};
-    const response = fetch("https://cors-anywhere.herokuapp.com/https://thevirustracker.com/timeline/map-data.json")
+    const response = fetch("https://api.covidtracking.com/v1/states/daily.json")
         .then(response => response.json())
         .then(json =>
         {
-            var data = json.data;
+            // var data = json.data;
             var total = 0;
-            for (var i = 0; i < data.length; i++)
+            for (var i = 0; i < json.length; i++)
             {
-                var date = data[i].date;
+                var date = json[i].date;
                 if (dateCount.hasOwnProperty(date))
                 {
-                    dateCount[date] = dateCount[date] + parseInt(data[i].cases);
+                    dateCount[date] = dateCount[date] + parseInt(json[i].positiveIncrease);
                 }
                 else
                 {
-                    dateCount[date] = parseInt(data[i].cases);
+                    dateCount[date] = parseInt(json[i].positiveIncrease);
                 }
                 
             }
             var ordered = {};
             Object.keys(dateCount).sort().forEach(function (key)
             {
-                ordered[key] = dateCount[key];
+                //20201119
+                var newKey = key.substring(0, 4) + "/" + key.substring(4,6) + "/" + key.substring(6);
+                ordered[new Date(newKey).toDateString()] = dateCount[key];
             });
-            console.log("ORDERED");
-            console.log(ordered);
 
             buildGraph(Object.keys(ordered), Object.values(ordered));
-            console.log(dateCount);
         });
 }
 
-function getCaseData(countryCode)
+function getCaseData(stateCode)
 {
-    if (countryCode == "Global")
+    if (stateCode == "All States")
     {
-        fetch("https://api.thevirustracker.com/free-api?global=stats")
+        fetch("https://api.covidtracking.com/v1/us/current.json")
             .then(response => response.json())
             .then(json =>
             {
-                console.log(json);
 
-                const totalCases = json.results[0].total_cases;
-                const totalDeaths = json.results[0].total_deaths;
-                const totalRecovered = json.results[0].total_recovered;
+                const totalCases = json[0].positive;
+                const totalDeaths = json[0].death;
+                const totalRecovered = json[0].recovered;
 
                 // const deathPercent = (totalDeaths / totalCases) * 100;
                 const deathPercent = (totalDeaths / (totalDeaths + totalRecovered)) * 100;
@@ -60,24 +58,42 @@ function getCaseData(countryCode)
     }
     else
     {
-        fetch("https://api.thevirustracker.com/free-api?countryTotal=" + countryCode)
+        fetch("https://api.covidtracking.com/v1/states/" + stateCode.toLowerCase() + "/current.json")
             .then(response => response.json())
             .then(json =>
             {
-                console.log(json);
 
-                const totalCases = json.countrydata[0].total_cases;
-                const totalDeaths = json.countrydata[0].total_deaths;
-                const totalRecovered = json.countrydata[0].total_recovered;
+                const totalCases = json.positive;
+                const totalDeaths = json.death;
+                var totalRecovered;
+                if (json.recovered != null)
+                {
+                    totalRecovered = json.recovered;
+                }
+                else
+                {
+                    totalRecovered = -1;
+                }
 
                 // const deathPercent = (totalDeaths / totalCases) * 100;
-                const deathPercent = (totalDeaths / (totalDeaths + totalRecovered)) * 100;
+                if (totalRecovered != -1)
+                {
+
+                    const deathPercent = (totalDeaths / (totalDeaths + totalRecovered)) * 100;
+                    const recoveredPercent = (totalRecovered / (totalDeaths + totalRecovered)) * 100;
+                    document.getElementById("totalDeaths").innerHTML = totalDeaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " (" + deathPercent.toFixed(2) + "%)";
+                    document.getElementById("totalRecovered").innerHTML = totalRecovered.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " (" + recoveredPercent.toFixed(2) + "%)";
+                }
+                else
+                {
+                    document.getElementById("totalDeaths").innerHTML = totalDeaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    document.getElementById("totalRecovered").innerHTML = "Not Available";
+                
+                }
                 // const recoveredPercent = (totalRecovered / totalCases) * 100;
-                const recoveredPercent = (totalRecovered / (totalDeaths + totalRecovered)) * 100;
 
                 document.getElementById("totalCases").innerHTML = totalCases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                document.getElementById("totalDeaths").innerHTML = totalDeaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " (" + deathPercent.toFixed(2) + "%)";
-                document.getElementById("totalRecovered").innerHTML = totalRecovered.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " (" + recoveredPercent.toFixed(2) + "%)";
+            
             });
     }    
 }
@@ -88,42 +104,26 @@ function getGraphData(countryCode)
 {
     var labels = [];
     var data = [];
-    if (countryCode == "Global")
+    if (countryCode == "All States")
     {
         getGlobalGraph();
     }
     else
     {
-        fetch("https://api.thevirustracker.com/free-api?countryTimeline=" + countryCode)
+        fetch(`"https://api.covidtracking.com/v1/states/" + countryCode.toLowerCase() + "/daily.json"`)
         .then(response => response.json())
         .then(json =>
         {
-            const dates = json.timelineitems[0];
-
-            console.log(json);
-            console.log(dates);
+            // const dates = json[0];
 
 
-            //get labels (dates)
-            for (var key in dates)
+            for (var i = 0; i < json.length; i++)
             {
-                labels.push(key.toString());
+                var newKey = json[i].date.toString().substring(0, 4) + "/" + json[i].date.toString().substring(4,6) + "/" + json[i].date.toString().substring(6);
+                labels.unshift(new Date(newKey).toDateString());
+                data.unshift(json[i].positiveIncrease);
+                
             }
-            labels.pop();
-            console.log(labels);
-
-
-
-            for (var key in dates)
-            {
-                // console.log(dates[key]);
-                if (dates[key].hasOwnProperty("total_cases"))
-                {
-                    console.log("pushing");
-                    data.push(parseInt(dates[key].total_cases));
-                }
-            }
-            console.log(data);
 
 
             buildGraph(labels, data);
@@ -135,7 +135,7 @@ function getGraphData(countryCode)
     // .then(response => response.json())
 }
 
-
+//initial building of graph
 function buildGraph(labels, data)
 {
     var ctx = document.getElementById('myChart').getContext('2d');
@@ -147,7 +147,7 @@ function buildGraph(labels, data)
             labels: labels, //dates
             // labels: ["test", "test2", "test3"], //dates
             datasets: [{
-                label: '# of Total Cases',
+                label: '# of New Cases',
                 data: data,
                 // data: [2, 5, 20],
                 backgroundColor: [
@@ -198,37 +198,38 @@ function buildGraph(labels, data)
     });
 }
 
-function updateGraph(countryCode)
+function updateGraph(stateCode)
 {
     var labels = [];
     var data = [];
-    if (countryCode == "Global")
+    if (stateCode == "All States")
     {
         var dateCount = {};
-        const response = fetch("https://cors-anywhere.herokuapp.com/https://thevirustracker.com/timeline/map-data.json")
+        const response = fetch("https://api.covidtracking.com/v1/states/daily.json")
             .then(response => response.json())
             .then(json =>
             {
-                var data = json.data;
+                // var data = json.data;
                 var total = 0;
-                for (var i = 0; i < data.length; i++)
+                for (var i = 0; i < json.length; i++)
                 {
-                    var date = data[i].date;
+                    var date = json[i].date;
                     if (dateCount.hasOwnProperty(date))
                     {
-                        dateCount[date] = dateCount[date] + parseInt(data[i].cases);
+                        dateCount[date] = dateCount[date] + parseInt(json[i].positiveIncrease);
                     }
                     else
                     {
-                        dateCount[date] = parseInt(data[i].cases);
+                        dateCount[date] = parseInt(json[i].positiveIncrease);
                     }
-
+                    
                 }
-
                 var ordered = {};
                 Object.keys(dateCount).sort().forEach(function (key)
                 {
-                    ordered[key] = dateCount[key];
+                    //20201119
+                    var newKey = key.substring(0, 4) + "/" + key.substring(4,6) + "/" + key.substring(6);
+                    ordered[new Date(newKey).toDateString()] = dateCount[key];
                 });
 
                 Chart.helpers.each(Chart.instances, function (instance)
@@ -243,36 +244,20 @@ function updateGraph(countryCode)
     }
     else
     {
-        fetch("https://api.thevirustracker.com/free-api?countryTimeline=" + countryCode)
+        fetch("https://api.covidtracking.com/v1/states/" + stateCode.toLowerCase() + "/daily.json")
         .then(response => response.json())
         .then(json =>
         {
-            const dates = json.timelineitems[0];
-
-            console.log(json);
-            console.log(dates);
-
-
-            //get labels (dates)
-            for (var key in dates)
+            for (i = 0; i < json.length; i++)
             {
-                labels.push(key.toString());
+                // console.log(i);
+                const options = { year: "numeric", month: "long", day: "numeric" }
+                // console.log(new Date("2020/11/19").toLocaleDateString(undefined, options));
+                var newKey = json[i].date.toString().substring(0, 4) + "/" + json[i].date.toString().substring(4,6) + "/" + json[i].date.toString().substring(6);
+                labels.unshift(new Date(newKey).toDateString());
+                data.unshift(json[i].positiveIncrease);
+                // console.log(labels);    
             }
-            labels.pop();
-            console.log(labels);
-
-
-
-            for (var key in dates)
-            {
-                // console.log(dates[key]);
-                if (dates[key].hasOwnProperty("total_cases"))
-                {
-                    console.log("pushing");
-                    data.push(parseInt(dates[key].total_cases));
-                }
-            }
-            console.log(data);
 
             
             Chart.helpers.each(Chart.instances, function (instance)
@@ -289,11 +274,10 @@ function updateGraph(countryCode)
 
 
 
-function populateCountries()
+function populateStates()
 {
     var select = document.getElementById("selectNumber");
-    var options = Object.keys(isoCountries);
-    console.log(options);
+    var options = Object.keys(stateCodes);
     for(var i = 0; i < options.length; i++)
     {
         var opt = options[i];
@@ -306,213 +290,78 @@ function populateCountries()
 
 
 
-function getCountryCode(countryName)
+function getStateCode(stateName)
 {
-    if (isoCountries.hasOwnProperty(countryName))
+    if (stateCodes.hasOwnProperty(stateName))
     {
-        return isoCountries[countryName];
+        return stateCodes[stateName];
     } else
     {
-        return countryName;
+        return stateName;
     }
 }
 
 
 function changeForm()
 {
-    console.log("CHANGING");
     var e = document.getElementById("selectNumber");
     var strUser = e.options[e.selectedIndex].text;
-    console.log(strUser);
 
-    var code = getCountryCode(strUser);
-    console.log(code);
+    var code = getStateCode(strUser);
     updateGraph(code);
     getCaseData(code);
 }
 
-
-
-var isoCountries = {
-    // 'Global': 'Global',
-    'United States': 'US',
-    'Afghanistan': 'AF',
-    'Albania': 'AL',
-    'Algeria': 'DZ',
-    'Angola': 'AO',
-    'Argentina': 'AR',
-    'Armenia': 'AM',
-    'Australia': 'AU',
-    'Austria': 'AT',
-    'Azerbaijan': 'AZ',
-    'Bahamas': 'BS',
-    'Bangladesh': 'BD',
-    'Belarus': 'BY',
-    'Belgium': 'BE',
-    'Belize': 'BZ',
-    'Benin': 'BJ',
-    'Bhutan': 'BT',
-    'Bolivia': 'BO',
-    'Bosnia And Herzegovina': 'BA',
-    'Botswana': 'BW',
-    'Brazil': 'BR',
-    'Brunei Darussalam': 'BN',
-    'Bulgaria': 'BG',
-    'Burkina Faso': 'BF',
-    'Burundi': 'BI',
-    'Cambodia': 'KH',
-    'Cameroon': 'CM',
-    'Canada': 'CA',
-    'Central African Republic': 'CF',
-    'Chad': 'TD',
-    'Chile': 'CL',
-    'China': 'CN',
-    'Colombia': 'CO',
-    'Congo': 'CG',
-    'Congo, Democratic Republic': 'CD',
-    'Cook Islands': 'CK',
-    'Costa Rica': 'CR',
-    'Cote D\'Ivoire': 'CI',
-    'Croatia': 'HR',
-    'Cuba': 'CU',
-    'Cyprus': 'CY',
-    'Czech Republic': 'CZ',
-    'Denmark': 'DK',
-    'Djibouti': 'DJ',
-    'Dominican Republic': 'DO',
-    'Ecuador': 'EC',
-    'Egypt': 'EG',
-    'El Salvador': 'SV',
-    'Equatorial Guinea': 'GQ',
-    'Eritrea': 'ER',
-    'Estonia': 'EE',
-    'Ethiopia': 'ET',
-    'Falkland Islands': 'FK',
-    'Fiji': 'FJ',
-    'Finland': 'FI',
-    'France': 'FR',
-    'French Guiana': 'GF',
-    'French Southern Territories': 'TF',
-    'Gabon': 'GA',
-    'Gambia': 'GM',
-    'Georgia': 'GE',
-    'Germany': 'DE',
-    'Ghana': 'GH',
-    'Greece': 'GR',
-    'Greenland': 'GL',
-    'Guatemala': 'GT',
-    'Guernsey': 'GG',
-    'Guinea': 'GN',
-    'Guinea-Bissau': 'GW',
-    'Guyana': 'GY',
-    'Haiti': 'HT',
-    'Honduras': 'HN',
-    'Hong Kong': 'HK',
-    'Hungary': 'HU',
-    'Iceland': 'IS',
-    'India': 'IN',
-    'Indonesia': 'ID',
-    'Iran, Islamic Republic Of': 'IR',
-    'Iraq': 'IQ',
-    'Ireland': 'IE',
-    'Israel': 'IL',
-    'Italy': 'IT',
-    'Jamaica': 'JM',
-    'Japan': 'JP',
-    'Jordan': 'JO',
-    'Kazakhstan': 'KZ',
-    'Kenya': 'KE',
-    'Kosovo' : 'XK',
-    'Kuwait' : 'KW',
-    'Kyrgyzstan': 'KG',
-    'Lao People\'s Democratic Republic': 'LA',
-    'Latvia': 'LV',
-    'Lebanon': 'LB',
-    'Lesotho': 'LS',
-    'Liberia': 'LR',
-    'Libyan Arab Jamahiriya': 'LY',
-    'Lithuania': 'LT',
-    'Luxembourg': 'LU',
-    'Macedonia': 'MK',
-    'Madagascar': 'MG',
-    'Malawi': 'MW',
-    'Malaysia': 'MY',
-    'Mali': 'ML',
-    'Mauritania': 'MR',
-    'Mexico': 'MX',
-    'Moldova': 'MD',
-    'Mongolia': 'MN',
-    'Montenegro': 'ME',
-    'Morocco': 'MA',
-    'Mozambique': 'MZ',
-    'Myanmar': 'MM',
-    'Namibia': 'NA',
-    'Nepal': 'NP',
-    'Netherlands': 'NL',
-    'New Caledonia': 'NC',
-    'New Zealand': 'NZ',
-    'Nicaragua': 'NI',
-    'Niger': 'NE',
-    'Nigeria': 'NG',
-    'North Korea' : 'KP',
-    'Norway': 'NO',
-    'Oman': 'OM',
-    'Pakistan': 'PK',
-    'Palestine': 'PS',
-    'Panama': 'PA',
-    'Papua New Guinea': 'PG',
-    'Paraguay': 'PY',
-    'Peru': 'PE',
-    'Philippines': 'PH',
-    'Poland': 'PL',
-    'Portugal': 'PT',
-    'Puerto Rico': 'PR',
-    'Qatar': 'QA',
-    'Romania': 'RO',
-    'Russia': 'RU',
-    'Rwanda': 'RW',
-    'Saudi Arabia': 'SA',
-    'Senegal': 'SN',
-    'Serbia': 'RS',
-    'Sierra Leone': 'SL',
-    'Singapore': 'SG',
-    'Slovakia': 'SK',
-    'Slovenia': 'SI',
-    'Solomon Islands': 'SB',
-    'Somalia': 'SO',
-    'South Africa': 'ZA',
-    'South Korea' : 'KR',
-    'South Sudan' : 'SS',
-    'Spain': 'ES',
-    'Sri Lanka': 'LK',
-    'Sudan': 'SD',
-    'Suriname': 'SR',
-    'Svalbard And Jan Mayen': 'SJ',
-    'Swaziland': 'SZ',
-    'Sweden': 'SE',
-    'Switzerland': 'CH',
-    'Syrian Arab Republic': 'SY',
-    'Taiwan': 'TW',
-    'Tajikistan': 'TJ',
-    'Tanzania': 'TZ',
-    'Thailand': 'TH',
-    'Timor-Leste': 'TL',
-    'Togo': 'TG',
-    'Trinidad And Tobago': 'TT',
-    'Tunisia': 'TN',
-    'Turkey': 'TR',
-    'Turkmenistan': 'TM',
-    'Uganda': 'UG',
-    'Ukraine': 'UA',
-    'United Arab Emirates': 'AE',
-    'United Kingdom': 'GB',
-    'Uruguay': 'UY',
-    'Uzbekistan': 'UZ',
-    'Vanuatu': 'VU',
-    'Venezuela': 'VE',
-    'Vietnam': 'VN',
-    'Western Sahara': 'EH',
-    'Yemen': 'YE',
-    'Zambia': 'ZM',
-    'Zimbabwe': 'ZW'
+    
+var stateCodes = {
+    'Alabama' : 'AL',
+    'Alaska' : 'AK',
+    'Arizona' : 'AZ',
+    'Arkansas' : 'AR',
+    'California' : 'CA',
+    'Colorado' : 'CO',
+    'Connecticut' : 'CT',
+    'Delaware' : 'DE',
+    'Florida' : 'FL',
+    'Georgia' : 'GA',
+    'Hawaii' : 'HI',
+    'Idaho' : 'ID',
+    'Illinois' : 'IL',
+    'Indiana' : 'IN',
+    'Iowa' : 'IA',
+    'Kansas' : 'KS',
+    'Kentucky' : 'KY',
+    'Louisiana' : 'LA',
+    'Maine' : 'ME',
+    'Maryland' : 'MD',
+    'Massachusetts' : 'MA',
+    'Michigan' : 'MI',
+    'Minnesota' : 'MN',
+    'Mississippi' : 'MS',
+    'Missouri' : 'MO',
+    'Montana' : 'MT',
+    'Nebraska' : 'NE',
+    'Nevada' : 'NV',
+    'New Hampshire' : 'NH',
+    'New Jersey' : 'NJ',
+    'New Mexico' : 'NM',
+    'New York' : 'NY',
+    'North Carolina' : 'NC',
+    'North Dakota' : 'ND',
+    'Ohio' : 'OH',
+    'Oklahoma' : 'OK',
+    'Oregon' : 'OR',
+    'Pennsylvania' : 'PA',
+    'Rhode Island' : 'RI',
+    'South Carolina' : 'SC',
+    'South Dakota' : 'SD',
+    'Tennessee' : 'TN',
+    'Texas' : 'TX',
+    'Utah' : 'UT',
+    'Vermont' : 'VT',
+    'Virginia' : 'VA',
+    'Washington' : 'WA',
+    'West Virginia' : 'WV',
+    'Wisconsin' : 'WI',
+    'Wyoming' : 'WY'
 };
