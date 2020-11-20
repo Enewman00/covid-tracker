@@ -1,13 +1,25 @@
 .header
 {
     width: 30%;
+    /* min-width: 530px; */
     position: sticky;
     top: 0px;
+    /* min-width: left; */
     left: 35%;
     height: 40px;
     border-width: 1px;
     border-color: black;
     border-radius: 7px;
+}
+
+@media screen and (max-width: 530px)
+{
+    .header
+    {
+        width: 100% !important;
+        left: 0 !important;
+
+    }
 }
 
 #selectNumber
