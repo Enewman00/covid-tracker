@@ -1,139 +1,26 @@
-//outputs: Dictionary - date to new cases
-function getGlobalGraph()
-{
-    var dateCount = {};
-    const response = fetch("https://api.covidtracking.com/v1/states/daily.json")
-        .then(response => response.json())
-        .then(json =>
-        {
-            // var data = json.data;
-            var total = 0;
-            for (var i = 0; i < json.length; i++)
-            {
-                var date = json[i].date;
-                if (dateCount.hasOwnProperty(date))
-                {
-                    dateCount[date] = dateCount[date] + parseInt(json[i].positiveIncrease);
-                }
-                else
-                {
-                    dateCount[date] = parseInt(json[i].positiveIncrease);
-                }
-                
-            }
-            var ordered = {};
-            Object.keys(dateCount).sort().forEach(function (key)
-            {
-                //20201119
-                var newKey = key.substring(0, 4) + "/" + key.substring(4,6) + "/" + key.substring(6);
-                ordered[new Date(newKey).toDateString()] = dateCount[key];
-            });
-
-            buildGraph(Object.keys(ordered), Object.values(ordered));
-        });
-}
 
 function getCaseData(stateCode)
 {
-    if (stateCode == "All States")
-    {
-        fetch("https://api.covidtracking.com/v1/us/current.json")
-            .then(response => response.json())
-            .then(json =>
-            {
-
-                const totalCases = json[0].positive;
-                const totalDeaths = json[0].death;
-                const totalRecovered = json[0].recovered;
-
-                // const deathPercent = (totalDeaths / totalCases) * 100;
-                const deathPercent = (totalDeaths / (totalDeaths + totalRecovered)) * 100;
-                // const recoveredPercent = (totalRecovered / totalCases) * 100;
-                const recoveredPercent = (totalRecovered / (totalDeaths + totalRecovered)) * 100;
-
-                document.getElementById("totalCases").innerHTML = totalCases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                document.getElementById("totalDeaths").innerHTML = totalDeaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " (" + deathPercent.toFixed(2) + "%)";
-                document.getElementById("totalRecovered").innerHTML = totalRecovered.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " (" + recoveredPercent.toFixed(2) + "%)";
-            });
-    }
-    else
-    {
-        fetch("https://api.covidtracking.com/v1/states/" + stateCode.toLowerCase() + "/current.json")
-            .then(response => response.json())
-            .then(json =>
-            {
-
-                const totalCases = json.positive;
-                const totalDeaths = json.death;
-                var totalRecovered;
-                if (json.recovered != null)
-                {
-                    totalRecovered = json.recovered;
-                }
-                else
-                {
-                    totalRecovered = -1;
-                }
-
-                // const deathPercent = (totalDeaths / totalCases) * 100;
-                if (totalRecovered != -1)
-                {
-
-                    const deathPercent = (totalDeaths / (totalDeaths + totalRecovered)) * 100;
-                    const recoveredPercent = (totalRecovered / (totalDeaths + totalRecovered)) * 100;
-                    document.getElementById("totalDeaths").innerHTML = totalDeaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " (" + deathPercent.toFixed(2) + "%)";
-                    document.getElementById("totalRecovered").innerHTML = totalRecovered.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " (" + recoveredPercent.toFixed(2) + "%)";
-                }
-                else
-                {
-                    document.getElementById("totalDeaths").innerHTML = totalDeaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                    document.getElementById("totalRecovered").innerHTML = "Not Available";
-                
-                }
-                // const recoveredPercent = (totalRecovered / totalCases) * 100;
-
-                document.getElementById("totalCases").innerHTML = totalCases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            
-            });
-    }    
-}
-
-
-
-function getGraphData(countryCode)
-{
-    var labels = [];
-    var data = [];
-    if (countryCode == "All States")
-    {
-        getGlobalGraph();
-    }
-    else
-    {
-        fetch(`"https://api.covidtracking.com/v1/states/" + countryCode.toLowerCase() + "/daily.json"`)
+    
+    fetch("https://api.covidactnow.org/v2/state/" + stateCode.toUpperCase() + ".timeseries.json?apiKey=52c9b2ce6f2743aaa9d693ec589def07")
         .then(response => response.json())
+        .then(getActuals => getActuals.actuals)
         .then(json =>
         {
-            // const dates = json[0];
-
-
-            for (var i = 0; i < json.length; i++)
-            {
-                var newKey = json[i].date.toString().substring(0, 4) + "/" + json[i].date.toString().substring(4,6) + "/" + json[i].date.toString().substring(6);
-                labels.unshift(new Date(newKey).toDateString());
-                data.unshift(json[i].positiveIncrease);
-                
-            }
-
-
-            buildGraph(labels, data);
+            const totalCases = json.cases;
+            const totalDeaths = json.deaths;
+            const totalVaccinated= json.vaccinationsCompleted;
             
-            // dates.forEach(console.log());
+            
+            document.getElementById("totalDeaths").innerHTML = totalDeaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            document.getElementById("totalVaccinated").innerHTML = totalVaccinated.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            document.getElementById("totalCases").innerHTML = totalCases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        
         });
-    }
-    // .then(generateGraph(labels, data));
-    // .then(response => response.json())
+
 }
+
+
 
 //initial building of graph
 function buildGraph(labels, data)
@@ -202,74 +89,30 @@ function updateGraph(stateCode)
 {
     var labels = [];
     var data = [];
-    if (stateCode == "All States")
+    
+    fetch("https://api.covidactnow.org/v2/state/" + stateCode.toUpperCase() + ".timeseries.json?apiKey=52c9b2ce6f2743aaa9d693ec589def07")
+    .then(response => response.json())
+    .then(getTimeSeries => getTimeSeries.actualsTimeseries)
+    .then(json =>
     {
-        var dateCount = {};
-        const response = fetch("https://api.covidtracking.com/v1/states/daily.json")
-            .then(response => response.json())
-            .then(json =>
-            {
-                // var data = json.data;
-                var total = 0;
-                for (var i = 0; i < json.length; i++)
-                {
-                    var date = json[i].date;
-                    if (dateCount.hasOwnProperty(date))
-                    {
-                        dateCount[date] = dateCount[date] + parseInt(json[i].positiveIncrease);
-                    }
-                    else
-                    {
-                        dateCount[date] = parseInt(json[i].positiveIncrease);
-                    }
-                    
-                }
-                var ordered = {};
-                Object.keys(dateCount).sort().forEach(function (key)
-                {
-                    //20201119
-                    var newKey = key.substring(0, 4) + "/" + key.substring(4,6) + "/" + key.substring(6);
-                    ordered[new Date(newKey).toDateString()] = dateCount[key];
-                });
 
-                Chart.helpers.each(Chart.instances, function (instance)
-                {
-                    var chart = instance.chart;
-                    // .canvas.id;
-                    chart.data.labels = Object.keys(ordered);
-                    chart.data.datasets[0].data = Object.values(ordered);
-                    chart.update();
-                })
-            });
-    }
-    else
-    {
-        fetch("https://api.covidtracking.com/v1/states/" + stateCode.toLowerCase() + "/daily.json")
-        .then(response => response.json())
-        .then(json =>
+        for (i = 0; i < json.length; i++)
         {
-            for (i = 0; i < json.length; i++)
-            {
-                // console.log(i);
-                const options = { year: "numeric", month: "long", day: "numeric" }
-                // console.log(new Date("2020/11/19").toLocaleDateString(undefined, options));
-                var newKey = json[i].date.toString().substring(0, 4) + "/" + json[i].date.toString().substring(4,6) + "/" + json[i].date.toString().substring(6);
-                labels.unshift(new Date(newKey).toDateString());
-                data.unshift(json[i].positiveIncrease);
-                // console.log(labels);    
-            }
+            const options = { year: "numeric", month: "long", day: "numeric" }
+            var newKey = json[i].date.toString().substring(0, 4) + "/" + json[i].date.toString().substring(5,7) + "/" + json[i].date.toString().substring(8);
+            labels.push(new Date(newKey).toDateString());
+            data.push(json[i].newCases || 0);
+        }
 
-            
-            Chart.helpers.each(Chart.instances, function (instance)
-            {
-                var chart = instance.chart;
-                // .canvas.id;
-                chart.data.labels = labels;
-                chart.data.datasets[0].data = data;
-                chart.update();
-            })
-        });
-    }
+        Chart.helpers.each(Chart.instances, function (instance)
+        {
+            var chart = instance.chart;
+            // .canvas.id;
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = data;
+            chart.update();
+        })
+    });
 }
 
 

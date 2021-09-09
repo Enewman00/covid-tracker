@@ -17,7 +17,7 @@
 </head>
 
 
-<body>
+<body onload="buildGraph()">
 
 
 
@@ -29,7 +29,6 @@
     <div class="header">
         <form id="myForm" onsubmit="changeForm(); return false" action="#">
             <select id="selectNumber" onchange="changeForm();">
-                <option>All States</option>
             </select>
         </form>
     </div>
@@ -44,15 +43,15 @@
         <h1 id="deathsText" class="topText">Total Deaths:</h1>
         <h1 id="totalDeaths" class="topNumber"></h1>
     
-        <h1 id="recoveredText" class="topText">Total Recovered:</h1>
-        <h1 id="totalRecovered" class="topNumber"></h1>
-        <script>getCaseData("All States");</script>
+        <h1 id="recoveredText" class="topText">Total Vaccinated:</h1>
+        <h1 id="totalVaccinated" class="topNumber"></h1>
+        <script>getCaseData("AL");</script>
     </div>
     
     
     <div>
         <canvas id="myChart" width="400" height="400"></canvas>
-        <script>getGraphData("All States");</script>
+        <script>updateGraph("AL");</script>
     </div>
     
     <div class="totals safe">
